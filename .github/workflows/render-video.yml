@@ -1,30 +1,47 @@
-name: Render Remotion 16x9 Video
+name: Render Remotion Video
 
 on:
   workflow_dispatch:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
 
 jobs:
   render:
-    name: Render 1080p MP4
     runs-on: ubuntu-latest
+    # If your package.json is inside the 'remotion-expired-pills' folder, keep the 3 lines below.
+    # If package.json is in the root of your repo, delete the 'defaults:' block.
+    defaults:
+      run:
+        working-directory: remotion-expired-pills
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-      - name: Install Linux Chromium Dependencies
+          # REMOVED cache: 'npm' so it doesn't crash without package-lock.json
+
+      - name: Install system dependencies for Chromium
         run: |
           sudo apt-get update
           sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2
-      - name: Install NPM Packages
+
+      - name: Install NPM dependencies
         run: npm install
-      - name: Render Full MP4 with Audio
-        run: npx remotion render src/index.ts ExpiredMedicineMaster out/expired-medicine-arnold.mp4
-      - name: Upload Rendered MP4 Artifact
+
+      - name: Render Video
+        run: npx remotion render Main out/video.mp4
+
+      - name: Upload Rendered Video
         uses: actions/upload-artifact@v4
         with:
-          name: expired-medicine-arnold-mp4
-          path: out/expired-medicine-arnold.mp4
+          name: rendered-video
+          # If using working-directory: remotion-expired-pills, use: remotion-expired-pills/out/video.mp4
+          # If files are in the repo root, use: out/video.mp4
+          path: |
+            out/video.mp4
+            remotion-expired-pills/out/video.mp4
